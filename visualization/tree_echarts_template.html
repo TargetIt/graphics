@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN" style="height: 100%">
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="height: 100%; margin: 0">
+
+  <div style="float:none;">
+    <text>Ver:{{Ver}}</text>
+    <select id="dropdown">
+      <option value="A">A</option>
+      <option value="B">B</option>
+    </select>
+    <button onclick="renderTree(dataList[0])">X</button>
+    <button onclick="renderTree(dataList[1])">Y</button>
+
+    <button onclick="window.open('google.com','_blank')"><span style="color:blue;font-weight:bold;">使用说明</span></button>
+
+  </div>
+  <div id="container" style="height: 100%"></div>
+
+  <script type="text/javascript" src="lib/echarts.min.js"></script>
+
+  <script type="text/javascript">
+    var dom = document.getElementById('container');
+    var myChart = echarts.init(dom, null, {
+      renderer: 'canvas',
+      useDirtyRect: false
+    });
+    var app = {};
+
+    var option;
+
+    const dataList =
+      {{treeData}}
+          ;
+
+    function renderTree(data) {
+      option = {
+        tooltip: {
+          trigger: 'item',
+          triggerOn: 'mousemove',
+          formatter: function(info) {
+              return info.data.module;
+  }
+        },
+        series: [
+          {
+            type: 'tree',
+            id: 0,
+            name: 'tree1',
+            data: [data],
+            top: '2%',
+            left: '2%',
+            bottom: '2%',
+            right: '5%',
+            symbolSize: 9,
+            edgeShape: 'polyline',
+            edgeForkPosition: '63%',
+            initialTreeDepth: 20,
+            lineStyle: {
+              width: 2
+            },
+            label: {
+              fontSize: 12,
+              backgroundColor: '#fff',
+              position: 'left',
+              verticalAlign: 'middle',
+              align: 'right'
+            },
+            leaves: {
+              label: {
+                fontSize: 10,
+                position: 'right',
+                verticalAlign: 'middle',
+                align: 'left'
+              }
+            },
+            emphasis: {
+              focus: 'descendant'
+            },
+            expandAndCollapse: false,
+            //animationDuration: 550,
+            //animationDurationUpdate: 750
+          }
+        ]
+      };
+
+      if (option && typeof option === 'object') {
+        myChart.setOption(option);
+      }
+    }
+
+
+    renderTree(dataList[0]);
+    myChart.on('click', function(params) {
+                window.open(params.data.url, '_blank');
+    });
+    window.addEventListener('resize', myChart.resize);
+
+    function highlightModuleWrapper(chart, keyword) {
+      function highlightModule(node, keyword) {
+        if (!node) {
+          return;
+        }
+        if(node.module) {
+          if (node.module.indexOf(keyword) > -1) {
+            node.itemStyle = {
+              color: 'blue'
+            };
+            console.log(node.name)
+          } else {
+            node.itemStyle = {
+              color: null  
+            };
+          }
+        }
+
+        if (node.children) {
+          node.children.forEach(child => {
+            highlightModule(child, keyword); 
+          });
+        }
+
+        if (node.data) {
+          node.data.forEach(dataNode => {
+            highlightModule(dataNode, keyword);
+          }) 
+        }
+
+        }
+
+        // 用法:
+        var option = chart.getOption(); 
+        var series = option.series[0]; // 获取第一组系列数据
+        highlightModule(series, keyword);
+        chart.setOption(option);
+    }
+
+    var dropdown = document.getElementById("dropdown");
+
+    dropdown.addEventListener("change", function() {
+      var name = this.value;
+      //showName(name); 
+      highlightModuleWrapper(myChart, name);
+    });
+  </script>
+</body>
+</html>
